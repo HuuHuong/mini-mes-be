@@ -32,6 +32,11 @@ try
             .Build();
         options.Filters.Add(new AuthorizeFilter(policy));
     });
+    builder.Services.AddRouting(options =>
+    {
+        options.LowercaseUrls = true;
+        options.LowercaseQueryStrings = true;
+    });
     builder.Services.AddOpenApi();
 
     // ── Custom extensions ─────────────────────────────────────────────────────
