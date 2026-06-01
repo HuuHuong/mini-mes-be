@@ -1,0 +1,90 @@
+using MapsterMapper;
+using Microsoft.AspNetCore.Hosting.Server;
+using Microsoft.AspNetCore.Hosting.Server.Features;
+using mini_mes_be.Extensions;
+using mini_mes_be.Middlewares;
+using Scalar.AspNetCore;
+using Serilog;
+
+// ── Serilog bootstrap logger ──────────────────────────────────────────────────
+Log.Logger = new LoggerConfiguration()
+    .WriteTo.Console()
+    .CreateBootstrapLogger();
+
+try
+{
+    var builder = WebApplication.CreateBuilder(args);
+
+    // ── Serilog ───────────────────────────────────────────────────────────────
+    builder.Host.UseSerilog((ctx, lc) =>
+        lc.ReadFrom.Configuration(ctx.Configuration)
+          .WriteTo.Console());
+
+    // ── Core services ─────────────────────────────────────────────────────────
+    builder.Services.AddControllers();
+    builder.Services.AddOpenApi();
+
+    // ── Custom extensions ─────────────────────────────────────────────────────
+    builder.Services.AddDatabase(builder.Configuration);
+    builder.Services.AddValidation();
+    builder.Services.AddApplicationServices();
+
+    // ── CORS (adjust origins for production) ──────────────────────────────────
+    builder.Services.AddCors(opt => opt.AddPolicy("AllowAll", p =>
+        p.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader()));
+
+    // ── Mapster ───────────────────────────────────────────────────────────────
+    var mapsterConfig = new Mapster.TypeAdapterConfig();
+    builder.Services.AddSingleton(mapsterConfig);
+    builder.Services.AddScoped<IMapper, ServiceMapper>();
+
+    var app = builder.Build();
+
+    // ── Middleware pipeline ───────────────────────────────────────────────────
+    app.UseMiddleware<ExceptionMiddleware>();
+    app.UseSerilogRequestLogging();
+
+    if (app.Environment.IsDevelopment())
+    {
+        app.MapOpenApi();
+        app.MapScalarApiReference(opt =>
+        {
+            opt.Title = "Mini MES API";
+            opt.Theme = ScalarTheme.DeepSpace;
+        });
+    }
+
+    app.UseHttpsRedirection();
+    app.UseCors("AllowAll");
+    app.UseAuthorization();
+    app.MapControllers();
+
+    // ── Log Scalar URL after the server binds ────────────────────────────────
+    app.Lifetime.ApplicationStarted.Register(() =>
+    {
+        var server = app.Services.GetRequiredService<IServer>();
+        var addresses = server.Features.Get<IServerAddressesFeature>()?.Addresses ?? [];
+        var baseUrl = addresses.FirstOrDefault(a => a.StartsWith("http://")) ?? addresses.FirstOrDefault() ?? "http://localhost:5130";
+        var scalarUrl = $"{baseUrl}/scalar/v1";
+
+        Log.Information("Mini MES API is running");
+        Log.Information("Scalar API docs → {Url}", scalarUrl);
+
+        if (app.Environment.IsDevelopment())
+        {
+            // Auto-open browser
+            try { System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(scalarUrl) { UseShellExecute = true }); }
+            catch { /* ignore if browser cannot be opened */ }
+        }
+    });
+
+    app.Run();
+}
+catch (Exception ex)
+{
+    Log.Fatal(ex, "Application terminated unexpectedly");
+}
+finally
+{
+    Log.CloseAndFlush();
+}

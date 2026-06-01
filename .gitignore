@@ -1,0 +1,26 @@
+## .NET / ASP.NET Core
+bin/
+obj/
+*.user
+*.suo
+.vs/
+*.rsuser
+*.DotSettings.user
+
+## Secrets & sensitive config
+appsettings.*.json
+!appsettings.json
+!appsettings.Development.json
+
+## Rider / JetBrains
+.idea/
+
+## VS Code
+.vscode/
+
+## macOS
+.DS_Store
+
+## Logs
+logs/
+*.log
