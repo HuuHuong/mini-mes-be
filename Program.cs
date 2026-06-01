@@ -1,6 +1,8 @@
 using MapsterMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Hosting.Server.Features;
+using Microsoft.AspNetCore.Mvc.Authorization;
 using mini_mes_be.Extensions;
 using mini_mes_be.Middlewares;
 using Scalar.AspNetCore;
@@ -21,12 +23,21 @@ try
           .WriteTo.Console());
 
     // ── Core services ─────────────────────────────────────────────────────────
-    builder.Services.AddControllers();
+    // Global AuthorizeFilter: all endpoints require a valid JWT by default.
+    // Use [AllowAnonymous] on specific actions to opt-out (e.g. login, register).
+    builder.Services.AddControllers(options =>
+    {
+        var policy = new AuthorizationPolicyBuilder()
+            .RequireAuthenticatedUser()
+            .Build();
+        options.Filters.Add(new AuthorizeFilter(policy));
+    });
     builder.Services.AddOpenApi();
 
     // ── Custom extensions ─────────────────────────────────────────────────────
     builder.Services.AddDatabase(builder.Configuration);
     builder.Services.AddValidation();
+    builder.Services.AddJwtAuthentication(builder.Configuration);   // ← JWT
     builder.Services.AddApplicationServices();
 
     // ── CORS (adjust origins for production) ──────────────────────────────────
@@ -56,8 +67,13 @@ try
 
     app.UseHttpsRedirection();
     app.UseCors("AllowAll");
+
+    app.UseAuthentication();    // ← must come before UseAuthorization
     app.UseAuthorization();
-    app.MapControllers();
+
+    // RequireAuthorization() at the routing level is a second layer of enforcement.
+    // AllowAnonymous metadata (from [AllowAnonymous] attribute) still overrides this.
+    app.MapControllers().RequireAuthorization();
 
     // ── Log Scalar URL after the server binds ────────────────────────────────
     app.Lifetime.ApplicationStarted.Register(() =>
@@ -72,7 +88,6 @@ try
 
         if (app.Environment.IsDevelopment())
         {
-            // Auto-open browser
             try { System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(scalarUrl) { UseShellExecute = true }); }
             catch { /* ignore if browser cannot be opened */ }
         }

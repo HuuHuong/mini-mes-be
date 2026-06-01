@@ -11,6 +11,8 @@ obj/
 appsettings.*.json
 !appsettings.json
 !appsettings.Development.json
+# appsettings.Production.json contains real secrets — never commit it
+appsettings.Production.json
 
 ## Rider / JetBrains
 .idea/

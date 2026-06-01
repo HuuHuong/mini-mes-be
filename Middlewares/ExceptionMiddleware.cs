@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text.Json;
+using mini_mes_be.DTOs;
 
 namespace mini_mes_be.Middlewares;
 
@@ -11,25 +12,33 @@ public class ExceptionMiddleware(RequestDelegate next, ILogger<ExceptionMiddlewa
         {
             await next(context);
         }
+        catch (UnauthorizedAccessException ex)
+        {
+            logger.LogWarning("Unauthorized: {Message}", ex.Message);
+            await WriteJsonAsync(context, HttpStatusCode.Unauthorized, ex.Message);
+        }
+        catch (InvalidOperationException ex)
+        {
+            logger.LogWarning("Conflict/Bad request: {Message}", ex.Message);
+            await WriteJsonAsync(context, HttpStatusCode.Conflict, ex.Message);
+        }
         catch (Exception ex)
         {
             logger.LogError(ex, "Unhandled exception: {Message}", ex.Message);
-            await HandleExceptionAsync(context, ex);
+            await WriteJsonAsync(context, HttpStatusCode.InternalServerError, "An unexpected error occurred.");
         }
     }
 
-    private static Task HandleExceptionAsync(HttpContext context, Exception exception)
+    private static Task WriteJsonAsync(HttpContext context, HttpStatusCode status, string message)
     {
         context.Response.ContentType = "application/json";
-        context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
+        context.Response.StatusCode = (int)status;
 
-        var response = new
+        var response = ApiResponse.Fail(message, (int)status);
+        var body = JsonSerializer.Serialize(response, new JsonSerializerOptions
         {
-            success = false,
-            message = "An unexpected error occurred.",
-            detail = exception.Message
-        };
-
-        return context.Response.WriteAsync(JsonSerializer.Serialize(response));
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+        });
+        return context.Response.WriteAsync(body);
     }
 }
