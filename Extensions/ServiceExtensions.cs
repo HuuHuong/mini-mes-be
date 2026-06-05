@@ -31,12 +31,15 @@ public static class ServiceExtensions
         {
             options.InvalidModelStateResponseFactory = context =>
             {
-                var firstError = context.ModelState.Values
-                    .SelectMany(v => v.Errors)
-                    .Select(e => e.ErrorMessage)
-                    .FirstOrDefault() ?? "Validation failed.";
+                var errors = context.ModelState
+                    .Where(ms => ms.Value != null && ms.Value.Errors.Count > 0)
+                    .ToDictionary(
+                        ms => ms.Key,
+                        ms => ms.Value!.Errors.First().ErrorMessage ?? "Validation error"
+                    );
 
-                var response = mini_mes_be.DTOs.ApiResponse.Fail(firstError, 400);
+                var message = errors.Values.FirstOrDefault() ?? "Validation failed.";
+                var response = mini_mes_be.DTOs.ApiResponse.Fail(message, 400, errors);
                 return new Microsoft.AspNetCore.Mvc.BadRequestObjectResult(response);
             };
         });

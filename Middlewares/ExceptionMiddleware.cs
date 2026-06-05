@@ -12,6 +12,11 @@ public class ExceptionMiddleware(RequestDelegate next, ILogger<ExceptionMiddlewa
         {
             await next(context);
         }
+        catch (AppValidationException ex)
+        {
+            logger.LogWarning("Validation failed: {Message}", ex.Message);
+            await WriteJsonAsync(context, ex.StatusCode, ex.Message, ex.Errors);
+        }
         catch (UnauthorizedAccessException ex)
         {
             logger.LogWarning("Unauthorized: {Message}", ex.Message);
@@ -29,15 +34,16 @@ public class ExceptionMiddleware(RequestDelegate next, ILogger<ExceptionMiddlewa
         }
     }
 
-    private static Task WriteJsonAsync(HttpContext context, HttpStatusCode status, string message)
+    private static Task WriteJsonAsync(HttpContext context, HttpStatusCode status, string message, Dictionary<string, string>? errors = null)
     {
         context.Response.ContentType = "application/json";
         context.Response.StatusCode = (int)status;
 
-        var response = ApiResponse.Fail(message, (int)status);
+        var response = ApiResponse.Fail(message, (int)status, errors);
         var body = JsonSerializer.Serialize(response, new JsonSerializerOptions
         {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            DictionaryKeyPolicy = JsonNamingPolicy.CamelCase
         });
         return context.Response.WriteAsync(body);
     }

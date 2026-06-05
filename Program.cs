@@ -1,3 +1,4 @@
+using System.Text.Json;
 using MapsterMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting.Server;
@@ -31,6 +32,11 @@ try
             .RequireAuthenticatedUser()
             .Build();
         options.Filters.Add(new AuthorizeFilter(policy));
+    })
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+        options.JsonSerializerOptions.DictionaryKeyPolicy = JsonNamingPolicy.CamelCase;
     });
     builder.Services.AddRouting(options =>
     {

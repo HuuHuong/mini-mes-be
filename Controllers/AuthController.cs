@@ -7,7 +7,7 @@ using mini_mes_be.Services;
 namespace mini_mes_be.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("v1")]
 public class AuthController : ControllerBase
 {
     private readonly IAuthService _auth;
@@ -19,7 +19,7 @@ public class AuthController : ControllerBase
             ? ip.ToString()
             : HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
 
-    // ── POST /api/auth/register ───────────────────────────────────────────────
+    // ── POST /v1/register ───────────────────────────────────────────────
 
     /// <summary>Register a new user account (email must be unique).</summary>
     [AllowAnonymous]
@@ -32,7 +32,7 @@ public class AuthController : ControllerBase
         return CreatedAtAction(nameof(Register), ApiResponse<TokenResponse>.Ok(result, "Registration successful"));
     }
 
-    // ── POST /api/auth/login ─────────────────────────────────────────────────
+    // ── POST /v1/login ─────────────────────────────────────────────────
 
     /// <summary>Authenticate with email + password and obtain access + refresh tokens.</summary>
     [AllowAnonymous]
@@ -45,7 +45,7 @@ public class AuthController : ControllerBase
         return Ok(ApiResponse<TokenResponse>.Ok(result, "Login successful"));
     }
 
-    // ── POST /api/auth/refresh ───────────────────────────────────────────────
+    // ── POST /v1/refresh ───────────────────────────────────────────────
 
     /// <summary>Exchange a valid refresh token for a new access + refresh token pair.</summary>
     [AllowAnonymous]
@@ -58,7 +58,7 @@ public class AuthController : ControllerBase
         return Ok(ApiResponse<TokenResponse>.Ok(result, "Token refreshed"));
     }
 
-    // ── POST /api/auth/revoke ────────────────────────────────────────────────
+    // ── POST /v1/revoke ────────────────────────────────────────────────
 
     /// <summary>Revoke a refresh token (logout from a specific device).</summary>
     [Authorize]
@@ -71,7 +71,7 @@ public class AuthController : ControllerBase
         return NoContent();
     }
 
-    // ── GET /api/auth/me ─────────────────────────────────────────────────────
+    // ── GET /v1/me ─────────────────────────────────────────────────────
 
     /// <summary>Returns the currently authenticated user's claims.</summary>
     [Authorize]

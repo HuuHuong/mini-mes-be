@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using mini_mes_be.Data;
 using mini_mes_be.DTOs.Auth;
 using mini_mes_be.Models;
+using mini_mes_be.Middlewares;
 
 namespace mini_mes_be.Services;
 
@@ -52,8 +53,14 @@ public class AuthService : IAuthService
             .Include(u => u.RefreshTokens)
             .FirstOrDefaultAsync(u => u.Email == request.Email);
 
-        if (user is null || !user.IsActive || !BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
-            throw new UnauthorizedAccessException("Invalid credentials.");
+        if (user is null)
+            throw new AppValidationException("Invalid credentials.", "email", "Email is not registered.", System.Net.HttpStatusCode.Unauthorized);
+
+        if (!user.IsActive)
+            throw new AppValidationException("Invalid credentials.", "email", "Account is inactive.", System.Net.HttpStatusCode.Unauthorized);
+
+        if (!BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
+            throw new AppValidationException("Invalid credentials.", "password", "Incorrect password.", System.Net.HttpStatusCode.Unauthorized);
 
         return await IssueTokenPairAsync(user, ipAddress);
     }
