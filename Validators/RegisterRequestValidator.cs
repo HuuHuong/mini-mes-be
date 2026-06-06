@@ -1,4 +1,5 @@
 using FluentValidation;
+using mini_mes_be.Constants;
 using mini_mes_be.DTOs.Auth;
 
 namespace mini_mes_be.Validators;
@@ -13,22 +14,22 @@ public class RegisterRequestValidator : AbstractValidator<RegisterRequest>
     public RegisterRequestValidator()
     {
         RuleFor(x => x.username)
-            .NotEmpty().WithMessage("Username is required.")
-            .MinimumLength(3).WithMessage("Username must be at least 3 characters.")
-            .MaximumLength(100).WithMessage("Username must not exceed 100 characters.");
+            .NotEmpty().WithMessage(ErrorMessages.Validation.UsernameRequired)
+            .MinimumLength(3).WithMessage(ErrorMessages.Validation.UsernameMinLength)
+            .MaximumLength(100).WithMessage(ErrorMessages.Validation.UsernameMaxLength);
 
         RuleFor(x => x.email)
-            .NotEmpty().WithMessage("Email is required.")
-            .EmailAddress().WithMessage("A valid email address is required.");
+            .NotEmpty().WithMessage(ErrorMessages.Validation.EmailRequired)
+            .EmailAddress().WithMessage(ErrorMessages.Validation.EmailInvalid);
 
         RuleFor(x => x.password)
-            .NotEmpty().WithMessage("Password is required.")
-            .MinimumLength(8).WithMessage("Password must be at least 8 characters.")
-            .MaximumLength(128).WithMessage("Password must not exceed 128 characters.")
-            .Matches(@"[a-z]").WithMessage("Password must contain at least one lowercase letter.")
-            .Matches(@"[A-Z]").WithMessage("Password must contain at least one uppercase letter.")
-            .Matches(@"[0-9]").WithMessage("Password must contain at least one digit.")
-            .Matches(@"[^a-zA-Z0-9]").WithMessage("Password must contain at least one special character.");
+            .NotEmpty().WithMessage(ErrorMessages.Validation.PasswordRequired)
+            .MinimumLength(8).WithMessage(ErrorMessages.Validation.PasswordMinLength)
+            .MaximumLength(128).WithMessage(ErrorMessages.Validation.PasswordMaxLength)
+            .Matches(@"[a-z]").WithMessage(ErrorMessages.Validation.PasswordNeedsLowercase)
+            .Matches(@"[A-Z]").WithMessage(ErrorMessages.Validation.PasswordNeedsUppercase)
+            .Matches(@"[0-9]").WithMessage(ErrorMessages.Validation.PasswordNeedsDigit)
+            .Matches(@"[^a-zA-Z0-9]").WithMessage(ErrorMessages.Validation.PasswordNeedsSpecial);
     }
 }
 
@@ -40,10 +41,10 @@ public class LoginRequestValidator : AbstractValidator<LoginRequest>
     public LoginRequestValidator()
     {
         RuleFor(x => x.email)
-            .NotEmpty().WithMessage("Email is required.")
-            .EmailAddress().WithMessage("A valid email address is required.");
+            .NotEmpty().WithMessage(ErrorMessages.Validation.EmailRequired)
+            .EmailAddress().WithMessage(ErrorMessages.Validation.EmailInvalid);
 
         RuleFor(x => x.password)
-            .NotEmpty().WithMessage("Password is required.");
+            .NotEmpty().WithMessage(ErrorMessages.Validation.PasswordRequired);
     }
 }

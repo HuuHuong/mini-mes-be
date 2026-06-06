@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text.Json;
+using mini_mes_be.Constants;
 using mini_mes_be.DTOs;
 
 namespace mini_mes_be.Middlewares;
@@ -30,7 +31,7 @@ public class ExceptionMiddleware(RequestDelegate next, ILogger<ExceptionMiddlewa
         catch (Exception ex)
         {
             logger.LogError(ex, "Unhandled exception: {Message}", ex.Message);
-            await WriteJsonAsync(context, HttpStatusCode.InternalServerError, "An unexpected error occurred.");
+            await WriteJsonAsync(context, HttpStatusCode.InternalServerError, ErrorMessages.UnexpectedError);
         }
     }
 

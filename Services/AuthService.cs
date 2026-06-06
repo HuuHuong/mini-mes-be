@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using mini_mes_be.Constants;
 using mini_mes_be.Data;
 using mini_mes_be.DTOs.Auth;
 using mini_mes_be.Models;
@@ -25,11 +26,11 @@ public class AuthService : IAuthService
     {
         // Check duplicate email
         if (await _db.Users.AnyAsync(u => u.email == request.email))
-            throw new InvalidOperationException("Email is already taken.");
+            throw new InvalidOperationException(ErrorMessages.Auth.EmailAlreadyTaken);
 
         // Check duplicate username
         if (await _db.Users.AnyAsync(u => u.username == request.username))
-            throw new InvalidOperationException("Username is already taken.");
+            throw new InvalidOperationException(ErrorMessages.Auth.UsernameAlreadyTaken);
 
         var user = new User
         {
@@ -54,13 +55,13 @@ public class AuthService : IAuthService
             .FirstOrDefaultAsync(u => u.email == request.email);
 
         if (user is null)
-            throw new AppValidationException("Invalid credentials.", "email", "Email is not registered.", System.Net.HttpStatusCode.Unauthorized);
+            throw new AppValidationException(ErrorMessages.Auth.InvalidCredentials, "email", ErrorMessages.Auth.EmailNotRegistered, System.Net.HttpStatusCode.Unauthorized);
 
         if (!user.is_active)
-            throw new AppValidationException("Invalid credentials.", "email", "Account is inactive.", System.Net.HttpStatusCode.Unauthorized);
+            throw new AppValidationException(ErrorMessages.Auth.InvalidCredentials, "email", ErrorMessages.Auth.AccountInactive, System.Net.HttpStatusCode.Unauthorized);
 
         if (!BCrypt.Net.BCrypt.Verify(request.password, user.password_hash))
-            throw new AppValidationException("Invalid credentials.", "password", "Incorrect password.", System.Net.HttpStatusCode.Unauthorized);
+            throw new AppValidationException(ErrorMessages.Auth.InvalidCredentials, "password", ErrorMessages.Auth.IncorrectPassword, System.Net.HttpStatusCode.Unauthorized);
 
         return await IssueTokenPairAsync(user, ipAddress);
     }
@@ -75,7 +76,7 @@ public class AuthService : IAuthService
             .FirstOrDefaultAsync(rt => rt.token == refreshToken);
 
         if (stored is null || !stored.is_active)
-            throw new UnauthorizedAccessException("Invalid or expired refresh token.");
+            throw new UnauthorizedAccessException(ErrorMessages.Auth.InvalidRefreshToken);
 
         // Rotate: revoke old, issue new
         RevokeToken(stored, ipAddress, "Rotated");
@@ -90,7 +91,7 @@ public class AuthService : IAuthService
     {
         var stored = await _db.RefreshTokens.FirstOrDefaultAsync(rt => rt.token == refreshToken);
         if (stored is null || !stored.is_active)
-            throw new UnauthorizedAccessException("Invalid or already revoked refresh token.");
+            throw new UnauthorizedAccessException(ErrorMessages.Auth.RevokedRefreshToken);
 
         RevokeToken(stored, ipAddress, "Revoked by user");
         await _db.SaveChangesAsync();

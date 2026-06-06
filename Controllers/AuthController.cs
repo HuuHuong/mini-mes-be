@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using mini_mes_be.Constants;
 using mini_mes_be.DTOs;
 using mini_mes_be.DTOs.Auth;
 using mini_mes_be.Services;
@@ -29,7 +30,7 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> Register([FromBody] RegisterRequest request)
     {
         var result = await _auth.RegisterAsync(request, IpAddress);
-        return CreatedAtAction(nameof(Register), ApiResponse<TokenResponse>.Ok(result, "Registration successful"));
+        return CreatedAtAction(nameof(Register), ApiResponse<TokenResponse>.Ok(result, ErrorMessages.Auth.RegistrationSuccess));
     }
 
     // ── POST /v1/login ─────────────────────────────────────────────────
@@ -42,7 +43,7 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
         var result = await _auth.LoginAsync(request, IpAddress);
-        return Ok(ApiResponse<TokenResponse>.Ok(result, "Login successful"));
+        return Ok(ApiResponse<TokenResponse>.Ok(result, ErrorMessages.Auth.LoginSuccess));
     }
 
     // ── POST /v1/refresh ───────────────────────────────────────────────
@@ -55,7 +56,7 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> Refresh([FromBody] RefreshTokenRequest request)
     {
         var result = await _auth.RefreshTokenAsync(request.refresh_token, IpAddress);
-        return Ok(ApiResponse<TokenResponse>.Ok(result, "Token refreshed"));
+        return Ok(ApiResponse<TokenResponse>.Ok(result, ErrorMessages.Auth.TokenRefreshed));
     }
 
     // ── POST /v1/revoke ────────────────────────────────────────────────
