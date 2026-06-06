@@ -6,22 +6,22 @@ namespace mini_mes_be.Models;
 /// </summary>
 public class RefreshToken : BaseEntity
 {
-    public string Token { get; set; } = string.Empty;
+    public string token { get; set; } = string.Empty;
 
     /// <summary>Unix timestamp (seconds) when this token expires.</summary>
-    public long ExpiresAt { get; set; }
+    public long expires_at { get; set; }
 
-    public bool IsRevoked { get; set; } = false;
-    public string? ReplacedByToken { get; set; }
-    public string? CreatedByIp { get; set; }
-    public string? RevokedByIp { get; set; }
+    public bool is_revoked { get; set; } = false;
+    public string? replaced_by_token { get; set; }
+    public string? created_by_ip { get; set; }
+    public string? revoked_by_ip { get; set; }
 
     /// <summary>Unix timestamp (seconds) when this token was revoked. Null if still active.</summary>
-    public long? RevokedAt { get; set; }
+    public long? revoked_at { get; set; }
 
     // FK — int to match User.Id
-    public int UserId { get; set; }
-    public User User { get; set; } = null!;
+    public int user_id { get; set; }
+    public User user { get; set; } = null!;
 
-    public bool IsActive => !IsRevoked && DateTimeOffset.UtcNow.ToUnixTimeSeconds() < ExpiresAt;
+    public bool is_active => !is_revoked && DateTimeOffset.UtcNow.ToUnixTimeSeconds() < expires_at;
 }

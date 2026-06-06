@@ -12,16 +12,16 @@ public class RegisterRequestValidator : AbstractValidator<RegisterRequest>
 {
     public RegisterRequestValidator()
     {
-        RuleFor(x => x.Username)
+        RuleFor(x => x.username)
             .NotEmpty().WithMessage("Username is required.")
             .MinimumLength(3).WithMessage("Username must be at least 3 characters.")
             .MaximumLength(100).WithMessage("Username must not exceed 100 characters.");
 
-        RuleFor(x => x.Email)
+        RuleFor(x => x.email)
             .NotEmpty().WithMessage("Email is required.")
             .EmailAddress().WithMessage("A valid email address is required.");
 
-        RuleFor(x => x.Password)
+        RuleFor(x => x.password)
             .NotEmpty().WithMessage("Password is required.")
             .MinimumLength(8).WithMessage("Password must be at least 8 characters.")
             .MaximumLength(128).WithMessage("Password must not exceed 128 characters.")
@@ -39,11 +39,11 @@ public class LoginRequestValidator : AbstractValidator<LoginRequest>
 {
     public LoginRequestValidator()
     {
-        RuleFor(x => x.Email)
+        RuleFor(x => x.email)
             .NotEmpty().WithMessage("Email is required.")
             .EmailAddress().WithMessage("A valid email address is required.");
 
-        RuleFor(x => x.Password)
+        RuleFor(x => x.password)
             .NotEmpty().WithMessage("Password is required.");
     }
 }

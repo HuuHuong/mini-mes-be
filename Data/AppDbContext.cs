@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using mini_mes_be.Models;
+using mini_mes_be.Extensions;
 
 namespace mini_mes_be.Data;
 
@@ -15,25 +16,72 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         // ── User ──────────────────────────────────────────────────────────────
         modelBuilder.Entity<User>(e =>
         {
-            e.HasKey(u => u.Id);
-            e.Property(u => u.Id).ValueGeneratedOnAdd();        // IDENTITY(1,1)
-            e.HasIndex(u => u.Username).IsUnique();
-            e.HasIndex(u => u.Email).IsUnique();
-            e.Property(u => u.Username).HasMaxLength(100).IsRequired();
-            e.Property(u => u.Email).HasMaxLength(256).IsRequired();
-            e.Property(u => u.Role).HasMaxLength(50).IsRequired();
+            e.HasKey(u => u.id);
+            e.Property(u => u.id).ValueGeneratedOnAdd();        // IDENTITY(1,1)
+            e.HasIndex(u => u.username).IsUnique();
+            e.HasIndex(u => u.email).IsUnique();
+            e.Property(u => u.username).HasMaxLength(100).IsRequired();
+            e.Property(u => u.email).HasMaxLength(256).IsRequired();
+            e.Property(u => u.role).HasMaxLength(50).IsRequired();
         });
 
         // ── RefreshToken ──────────────────────────────────────────────────────
         modelBuilder.Entity<RefreshToken>(e =>
         {
-            e.HasKey(rt => rt.Id);
-            e.Property(rt => rt.Id).ValueGeneratedOnAdd();      // IDENTITY(1,1)
-            e.HasIndex(rt => rt.Token).IsUnique();
-            e.HasOne(rt => rt.User)
-             .WithMany(u => u.RefreshTokens)
-             .HasForeignKey(rt => rt.UserId)
+            e.HasKey(rt => rt.id);
+            e.Property(rt => rt.id).ValueGeneratedOnAdd();      // IDENTITY(1,1)
+            e.HasIndex(rt => rt.token).IsUnique();
+            e.HasOne(rt => rt.user)
+             .WithMany(u => u.refresh_tokens)
+             .HasForeignKey(rt => rt.user_id)
              .OnDelete(DeleteBehavior.Cascade);
         });
+
+        // Apply snake_case naming convention to all tables, columns, keys, foreign keys, and indexes
+        foreach (var entity in modelBuilder.Model.GetEntityTypes())
+        {
+            // Table names
+            var tableName = entity.GetTableName();
+            if (tableName != null)
+            {
+                entity.SetTableName(tableName.ToSnakeCase());
+            }
+
+            // Column names
+            foreach (var property in entity.GetProperties())
+            {
+                property.SetColumnName(property.Name.ToSnakeCase());
+            }
+
+            // Keys
+            foreach (var key in entity.GetKeys())
+            {
+                var keyName = key.GetName();
+                if (keyName != null)
+                {
+                    key.SetName(keyName.ToSnakeCase());
+                }
+            }
+
+            // Foreign Keys
+            foreach (var fk in entity.GetForeignKeys())
+            {
+                var fkName = fk.GetConstraintName();
+                if (fkName != null)
+                {
+                    fk.SetConstraintName(fkName.ToSnakeCase());
+                }
+            }
+
+            // Indexes
+            foreach (var index in entity.GetIndexes())
+            {
+                var indexName = index.GetDatabaseName();
+                if (indexName != null)
+                {
+                    index.SetDatabaseName(indexName.ToSnakeCase());
+                }
+            }
+        }
     }
 }

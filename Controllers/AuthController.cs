@@ -54,7 +54,7 @@ public class AuthController : ControllerBase
     [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Refresh([FromBody] RefreshTokenRequest request)
     {
-        var result = await _auth.RefreshTokenAsync(request.RefreshToken, IpAddress);
+        var result = await _auth.RefreshTokenAsync(request.refresh_token, IpAddress);
         return Ok(ApiResponse<TokenResponse>.Ok(result, "Token refreshed"));
     }
 
@@ -67,7 +67,7 @@ public class AuthController : ControllerBase
     [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Revoke([FromBody] RefreshTokenRequest request)
     {
-        await _auth.RevokeTokenAsync(request.RefreshToken, IpAddress);
+        await _auth.RevokeTokenAsync(request.refresh_token, IpAddress);
         return NoContent();
     }
 
@@ -76,19 +76,18 @@ public class AuthController : ControllerBase
     /// <summary>Returns the currently authenticated user's claims.</summary>
     [Authorize]
     [HttpGet("me")]
-    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<UserMeResponse>), StatusCodes.Status200OK)]
     public IActionResult Me()
     {
         var sub = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
                ?? User.FindFirst("sub")?.Value;
 
-        var me = new
-        {
-            Id       = int.TryParse(sub, out var id) ? id : (int?)null,
-            Username = User.Identity?.Name,
-            Email    = User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value,
-            Role     = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value
-        };
-        return Ok(ApiResponse<object>.Ok(me));
+        var me = new UserMeResponse(
+            int.TryParse(sub, out var id) ? id : null,
+            User.Identity?.Name,
+            User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value,
+            User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value
+        );
+        return Ok(ApiResponse<UserMeResponse>.Ok(me));
     }
 }

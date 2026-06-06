@@ -1,4 +1,5 @@
 using System.Net;
+using mini_mes_be.Extensions;
 
 namespace mini_mes_be.Middlewares;
 
@@ -11,13 +12,13 @@ public class AppValidationException : Exception
         : base(message)
     {
         StatusCode = statusCode;
-        Errors = new Dictionary<string, string> { { field, fieldError } };
+        Errors = new Dictionary<string, string> { { field.ToSnakeCase(), fieldError } };
     }
 
     public AppValidationException(string message, Dictionary<string, string> errors, HttpStatusCode statusCode = HttpStatusCode.BadRequest)
         : base(message)
     {
         StatusCode = statusCode;
-        Errors = errors;
+        Errors = errors.ToDictionary(kvp => kvp.Key.ToSnakeCase(), kvp => kvp.Value);
     }
 }

@@ -34,7 +34,7 @@ public static class ServiceExtensions
                 var errors = context.ModelState
                     .Where(ms => ms.Value != null && ms.Value.Errors.Count > 0)
                     .ToDictionary(
-                        ms => ms.Key,
+                        ms => ms.Key.ToSnakeCase(),
                         ms => ms.Value!.Errors.First().ErrorMessage ?? "Validation error"
                     );
 

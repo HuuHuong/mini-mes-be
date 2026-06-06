@@ -9,11 +9,11 @@ namespace mini_mes_be.Models;
 public abstract class BaseEntity
 {
     /// <summary>Auto-increment integer primary key.</summary>
-    public int Id { get; set; }
+    public int id { get; set; }
 
     /// <summary>Unix timestamp (seconds) when the record was created.</summary>
-    public long CreatedAt { get; set; } = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+    public long created_at { get; set; } = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
 
     /// <summary>Unix timestamp (seconds) when the record was last updated. Null if never updated.</summary>
-    public long? UpdatedAt { get; set; }
+    public long? updated_at { get; set; }
 }

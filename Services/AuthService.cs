@@ -24,19 +24,19 @@ public class AuthService : IAuthService
     public async Task<TokenResponse> RegisterAsync(RegisterRequest request, string ipAddress)
     {
         // Check duplicate email
-        if (await _db.Users.AnyAsync(u => u.Email == request.Email))
+        if (await _db.Users.AnyAsync(u => u.email == request.email))
             throw new InvalidOperationException("Email is already taken.");
 
         // Check duplicate username
-        if (await _db.Users.AnyAsync(u => u.Username == request.Username))
+        if (await _db.Users.AnyAsync(u => u.username == request.username))
             throw new InvalidOperationException("Username is already taken.");
 
         var user = new User
         {
-            Username = request.Username,
-            Email    = request.Email,
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
-            Role = "User"
+            username      = request.username,
+            email         = request.email,
+            password_hash = BCrypt.Net.BCrypt.HashPassword(request.password),
+            role          = "User"
         };
 
         _db.Users.Add(user);
@@ -50,16 +50,16 @@ public class AuthService : IAuthService
     public async Task<TokenResponse> LoginAsync(LoginRequest request, string ipAddress)
     {
         var user = await _db.Users
-            .Include(u => u.RefreshTokens)
-            .FirstOrDefaultAsync(u => u.Email == request.Email);
+            .Include(u => u.refresh_tokens)
+            .FirstOrDefaultAsync(u => u.email == request.email);
 
         if (user is null)
             throw new AppValidationException("Invalid credentials.", "email", "Email is not registered.", System.Net.HttpStatusCode.Unauthorized);
 
-        if (!user.IsActive)
+        if (!user.is_active)
             throw new AppValidationException("Invalid credentials.", "email", "Account is inactive.", System.Net.HttpStatusCode.Unauthorized);
 
-        if (!BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
+        if (!BCrypt.Net.BCrypt.Verify(request.password, user.password_hash))
             throw new AppValidationException("Invalid credentials.", "password", "Incorrect password.", System.Net.HttpStatusCode.Unauthorized);
 
         return await IssueTokenPairAsync(user, ipAddress);
@@ -70,26 +70,26 @@ public class AuthService : IAuthService
     public async Task<TokenResponse> RefreshTokenAsync(string refreshToken, string ipAddress)
     {
         var stored = await _db.RefreshTokens
-            .Include(rt => rt.User)
-            .ThenInclude(u => u.RefreshTokens)
-            .FirstOrDefaultAsync(rt => rt.Token == refreshToken);
+            .Include(rt => rt.user)
+            .ThenInclude(u => u.refresh_tokens)
+            .FirstOrDefaultAsync(rt => rt.token == refreshToken);
 
-        if (stored is null || !stored.IsActive)
+        if (stored is null || !stored.is_active)
             throw new UnauthorizedAccessException("Invalid or expired refresh token.");
 
         // Rotate: revoke old, issue new
         RevokeToken(stored, ipAddress, "Rotated");
         await _db.SaveChangesAsync();
 
-        return await IssueTokenPairAsync(stored.User, ipAddress);
+        return await IssueTokenPairAsync(stored.user, ipAddress);
     }
 
     // ── Revoke ────────────────────────────────────────────────────────────────
 
     public async Task RevokeTokenAsync(string refreshToken, string ipAddress)
     {
-        var stored = await _db.RefreshTokens.FirstOrDefaultAsync(rt => rt.Token == refreshToken);
-        if (stored is null || !stored.IsActive)
+        var stored = await _db.RefreshTokens.FirstOrDefaultAsync(rt => rt.token == refreshToken);
+        if (stored is null || !stored.is_active)
             throw new UnauthorizedAccessException("Invalid or already revoked refresh token.");
 
         RevokeToken(stored, ipAddress, "Revoked by user");
@@ -107,10 +107,10 @@ public class AuthService : IAuthService
 
         var refreshTokenEntity = new RefreshToken
         {
-            Token        = refreshTokenValue,
-            ExpiresAt    = now.AddDays(expiryDays).ToUnixTimeSeconds(),
-            CreatedByIp  = ipAddress,
-            UserId       = user.Id
+            token         = refreshTokenValue,
+            expires_at    = now.AddDays(expiryDays).ToUnixTimeSeconds(),
+            created_by_ip = ipAddress,
+            user_id       = user.id
         };
 
         _db.RefreshTokens.Add(refreshTokenEntity);
@@ -123,25 +123,25 @@ public class AuthService : IAuthService
         var accessExpiry = now.AddMinutes(
             _config.GetValue<int>("Jwt:AccessTokenExpiryMinutes", 60)).ToUnixTimeSeconds();
 
-        return new TokenResponse(accessToken, refreshTokenValue, accessExpiry, user.Id, user.Username, user.Role);
+        return new TokenResponse(accessToken, refreshTokenValue, accessExpiry, user.id, user.username, user.role);
     }
 
     private static void RevokeToken(RefreshToken token, string ipAddress, string reason)
     {
-        token.IsRevoked       = true;
-        token.RevokedAt       = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-        token.RevokedByIp     = ipAddress;
-        token.ReplacedByToken = reason;
+        token.is_revoked       = true;
+        token.revoked_at       = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+        token.revoked_by_ip    = ipAddress;
+        token.replaced_by_token = reason;
     }
 
     private static void RemoveOldRefreshTokens(User user)
     {
         var cutoff = DateTimeOffset.UtcNow.AddDays(-30).ToUnixTimeSeconds();
-        var stale  = user.RefreshTokens
-            .Where(rt => !rt.IsActive && rt.CreatedAt < cutoff)
+        var stale  = user.refresh_tokens
+            .Where(rt => !rt.is_active && rt.created_at < cutoff)
             .ToList();
 
         foreach (var token in stale)
-            user.RefreshTokens.Remove(token);
+            user.refresh_tokens.Remove(token);
     }
 }

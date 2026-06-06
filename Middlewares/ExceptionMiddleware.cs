@@ -40,11 +40,7 @@ public class ExceptionMiddleware(RequestDelegate next, ILogger<ExceptionMiddlewa
         context.Response.StatusCode = (int)status;
 
         var response = ApiResponse.Fail(message, (int)status, errors);
-        var body = JsonSerializer.Serialize(response, new JsonSerializerOptions
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            DictionaryKeyPolicy = JsonNamingPolicy.CamelCase
-        });
+        var body = JsonSerializer.Serialize(response);
         return context.Response.WriteAsync(body);
     }
 }
