@@ -97,6 +97,32 @@ public class AuthService : IAuthService
         await _db.SaveChangesAsync();
     }
 
+    // ── Reset Password ─────────────────────────────────────────────────────
+
+    public async Task ResetPasswordAsync(ResetPasswordRequest request)
+    {
+        var user = await _db.Users
+            .Include(u => u.refresh_tokens)
+            .FirstOrDefaultAsync(u => u.email == request.email);
+
+        if (user is null)
+            throw new AppValidationException(ErrorMessages.Auth.EmailNotRegistered, "email", ErrorMessages.Auth.EmailNotRegistered);
+
+        if (!user.is_active)
+            throw new AppValidationException(ErrorMessages.Auth.AccountInactive, "email", ErrorMessages.Auth.AccountInactive);
+
+        if (request.new_password != request.confirm_password)
+            throw new AppValidationException("Passwords do not match", "confirm_password", "Passwords do not match");
+
+        user.password_hash = BCrypt.Net.BCrypt.HashPassword(request.new_password);
+
+        // Revoke all active refresh tokens for this user so existing sessions are invalidated
+        foreach (var token in user.refresh_tokens.Where(rt => rt.is_active))
+            RevokeToken(token, "system", "Password reset");
+
+        await _db.SaveChangesAsync();
+    }
+
     // ── Helpers ───────────────────────────────────────────────────────────────
 
     private async Task<TokenResponse> IssueTokenPairAsync(User user, string ipAddress)

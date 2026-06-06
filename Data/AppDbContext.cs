@@ -37,16 +37,10 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
              .OnDelete(DeleteBehavior.Cascade);
         });
 
-        // Apply snake_case naming convention to all tables, columns, keys, foreign keys, and indexes
+        // Apply snake_case naming convention to columns, keys, foreign keys, and indexes
+        // Note: keep table names in PascalCase (e.g. Users, RefreshTokens) per DB requirement.
         foreach (var entity in modelBuilder.Model.GetEntityTypes())
         {
-            // Table names
-            var tableName = entity.GetTableName();
-            if (tableName != null)
-            {
-                entity.SetTableName(tableName.ToSnakeCase());
-            }
-
             // Column names
             foreach (var property in entity.GetProperties())
             {

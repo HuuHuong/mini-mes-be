@@ -24,3 +24,5 @@ public record UserMeResponse(
     string? email,
     string? role
 );
+
+public record ResetPasswordRequest(string email, string new_password, string confirm_password);

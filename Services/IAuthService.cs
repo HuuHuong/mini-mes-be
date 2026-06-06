@@ -8,4 +8,5 @@ public interface IAuthService
     Task<TokenResponse> RegisterAsync(RegisterRequest request, string ipAddress);
     Task<TokenResponse> RefreshTokenAsync(string refreshToken, string ipAddress);
     Task RevokeTokenAsync(string refreshToken, string ipAddress);
+    Task ResetPasswordAsync(ResetPasswordRequest request);
 }

@@ -72,6 +72,19 @@ public class AuthController : ControllerBase
         return NoContent();
     }
 
+    // ── POST /v1/reset-password ──────────────────────────────────────────
+
+    /// <summary>Reset a user's password by email. Requires new password and confirmation.</summary>
+    [AllowAnonymous]
+    [HttpPost("reset_password")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
+    {
+        await _auth.ResetPasswordAsync(request);
+        return NoContent();
+    }
+
     // ── GET /v1/me ─────────────────────────────────────────────────────
 
     /// <summary>Returns the currently authenticated user's claims.</summary>
