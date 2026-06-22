@@ -32,6 +32,7 @@ try
             .Build();
         options.Filters.Add(new AuthorizeFilter(policy));
     });
+    builder.Services.AddSignalR();
     builder.Services.AddRouting(options =>
     {
         options.LowercaseUrls = true;
@@ -46,8 +47,10 @@ try
     builder.Services.AddApplicationServices();
 
     // ── CORS (adjust origins for production) ──────────────────────────────────
+    // SignalR requires AllowCredentials(), which cannot be combined with AllowAnyOrigin().
+    // SetIsOriginAllowed(_ => true) acts as a wildcard that is compatible with credentials.
     builder.Services.AddCors(opt => opt.AddPolicy("AllowAll", p =>
-        p.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader()));
+        p.SetIsOriginAllowed(_ => true).AllowAnyMethod().AllowAnyHeader().AllowCredentials()));
 
     // ── Mapster ───────────────────────────────────────────────────────────────
     var mapsterConfig = new Mapster.TypeAdapterConfig();
@@ -79,6 +82,7 @@ try
     // RequireAuthorization() at the routing level is a second layer of enforcement.
     // AllowAnonymous metadata (from [AllowAnonymous] attribute) still overrides this.
     app.MapControllers().RequireAuthorization();
+    app.MapHub<mini_mes_be.Hubs.MesHub>("/mes-hub");
 
     // ── Log Scalar URL after the server binds ────────────────────────────────
     app.Lifetime.ApplicationStarted.Register(() =>

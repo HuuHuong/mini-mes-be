@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using mini_mes_be.Data;
 
@@ -10,9 +11,11 @@ using mini_mes_be.Data;
 namespace mini_mes_be.Migrations.CreateModels
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260620081503_AddMesCoreEntities")]
+    partial class AddMesCoreEntities
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -222,10 +225,6 @@ namespace mini_mes_be.Migrations.CreateModels
                         .HasColumnType("int")
                         .HasColumnName("passed_quantity");
 
-                    b.Property<int>("product_id")
-                        .HasColumnType("int")
-                        .HasColumnName("product_id");
-
                     b.Property<string>("result")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -245,9 +244,6 @@ namespace mini_mes_be.Migrations.CreateModels
 
                     b.HasIndex("inspector_user_id")
                         .HasDatabaseName("ix__quality_checks_inspector_user_id");
-
-                    b.HasIndex("product_id")
-                        .HasDatabaseName("ix__quality_checks_product_id");
 
                     b.HasIndex("work_order_id")
                         .HasDatabaseName("ix__quality_checks_work_order_id");
@@ -401,6 +397,10 @@ namespace mini_mes_be.Migrations.CreateModels
                         .HasColumnType("int")
                         .HasColumnName("created_by_user_id");
 
+                    b.Property<int>("defect_quantity")
+                        .HasColumnType("int")
+                        .HasColumnName("defect_quantity");
+
                     b.Property<int>("machine_id")
                         .HasColumnType("int")
                         .HasColumnName("machine_id");
@@ -424,11 +424,23 @@ namespace mini_mes_be.Migrations.CreateModels
                         .HasColumnType("bigint")
                         .HasColumnName("planned_start");
 
+                    b.Property<int>("produced_quantity")
+                        .HasColumnType("int")
+                        .HasColumnName("produced_quantity");
+
+                    b.Property<int>("product_id")
+                        .HasColumnType("int")
+                        .HasColumnName("product_id");
+
                     b.Property<string>("status")
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)")
                         .HasColumnName("status");
+
+                    b.Property<int>("target_quantity")
+                        .HasColumnType("int")
+                        .HasColumnName("target_quantity");
 
                     b.Property<long?>("updated_at")
                         .HasColumnType("bigint")
@@ -446,6 +458,9 @@ namespace mini_mes_be.Migrations.CreateModels
                     b.HasIndex("order_number")
                         .IsUnique()
                         .HasDatabaseName("ix__work_orders_order_number");
+
+                    b.HasIndex("product_id")
+                        .HasDatabaseName("ix__work_orders_product_id");
 
                     b.ToTable("WorkOrders");
                 });
@@ -509,55 +524,6 @@ namespace mini_mes_be.Migrations.CreateModels
                     b.ToTable("WorkOrderLogs");
                 });
 
-            modelBuilder.Entity("mini_mes_be.Models.WorkOrderProduct", b =>
-                {
-                    b.Property<int>("id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasColumnName("id");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("id"));
-
-                    b.Property<long>("created_at")
-                        .HasColumnType("bigint")
-                        .HasColumnName("created_at");
-
-                    b.Property<int>("defect_quantity")
-                        .HasColumnType("int")
-                        .HasColumnName("defect_quantity");
-
-                    b.Property<int>("produced_quantity")
-                        .HasColumnType("int")
-                        .HasColumnName("produced_quantity");
-
-                    b.Property<int>("product_id")
-                        .HasColumnType("int")
-                        .HasColumnName("product_id");
-
-                    b.Property<int>("target_quantity")
-                        .HasColumnType("int")
-                        .HasColumnName("target_quantity");
-
-                    b.Property<long?>("updated_at")
-                        .HasColumnType("bigint")
-                        .HasColumnName("updated_at");
-
-                    b.Property<int>("work_order_id")
-                        .HasColumnType("int")
-                        .HasColumnName("work_order_id");
-
-                    b.HasKey("id")
-                        .HasName("pk__work_order_products");
-
-                    b.HasIndex("product_id")
-                        .HasDatabaseName("ix__work_order_products_product_id");
-
-                    b.HasIndex("work_order_id")
-                        .HasDatabaseName("ix__work_order_products_work_order_id");
-
-                    b.ToTable("WorkOrderProducts");
-                });
-
             modelBuilder.Entity("mini_mes_be.Models.InventoryTransaction", b =>
                 {
                     b.HasOne("mini_mes_be.Models.Product", "product")
@@ -596,13 +562,6 @@ namespace mini_mes_be.Migrations.CreateModels
                         .IsRequired()
                         .HasConstraintName("fk__quality_checks__users_inspector_user_id");
 
-                    b.HasOne("mini_mes_be.Models.Product", "product")
-                        .WithMany()
-                        .HasForeignKey("product_id")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired()
-                        .HasConstraintName("fk__quality_checks__products_product_id");
-
                     b.HasOne("mini_mes_be.Models.WorkOrder", "work_order")
                         .WithMany("quality_checks")
                         .HasForeignKey("work_order_id")
@@ -611,8 +570,6 @@ namespace mini_mes_be.Migrations.CreateModels
                         .HasConstraintName("fk__quality_checks__work_orders_work_order_id");
 
                     b.Navigation("inspector");
-
-                    b.Navigation("product");
 
                     b.Navigation("work_order");
                 });
@@ -645,9 +602,18 @@ namespace mini_mes_be.Migrations.CreateModels
                         .IsRequired()
                         .HasConstraintName("fk__work_orders__machines_machine_id");
 
+                    b.HasOne("mini_mes_be.Models.Product", "product")
+                        .WithMany("work_orders")
+                        .HasForeignKey("product_id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk__work_orders__products_product_id");
+
                     b.Navigation("created_by_user");
 
                     b.Navigation("machine");
+
+                    b.Navigation("product");
                 });
 
             modelBuilder.Entity("mini_mes_be.Models.WorkOrderLog", b =>
@@ -670,27 +636,6 @@ namespace mini_mes_be.Migrations.CreateModels
                     b.Navigation("work_order");
                 });
 
-            modelBuilder.Entity("mini_mes_be.Models.WorkOrderProduct", b =>
-                {
-                    b.HasOne("mini_mes_be.Models.Product", "product")
-                        .WithMany("work_order_products")
-                        .HasForeignKey("product_id")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired()
-                        .HasConstraintName("fk__work_order_products__products_product_id");
-
-                    b.HasOne("mini_mes_be.Models.WorkOrder", "work_order")
-                        .WithMany("products")
-                        .HasForeignKey("work_order_id")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk__work_order_products__work_orders_work_order_id");
-
-                    b.Navigation("product");
-
-                    b.Navigation("work_order");
-                });
-
             modelBuilder.Entity("mini_mes_be.Models.Machine", b =>
                 {
                     b.Navigation("work_orders");
@@ -700,7 +645,7 @@ namespace mini_mes_be.Migrations.CreateModels
                 {
                     b.Navigation("inventory_transactions");
 
-                    b.Navigation("work_order_products");
+                    b.Navigation("work_orders");
                 });
 
             modelBuilder.Entity("mini_mes_be.Models.User", b =>
@@ -711,8 +656,6 @@ namespace mini_mes_be.Migrations.CreateModels
             modelBuilder.Entity("mini_mes_be.Models.WorkOrder", b =>
                 {
                     b.Navigation("logs");
-
-                    b.Navigation("products");
 
                     b.Navigation("quality_checks");
                 });

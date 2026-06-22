@@ -99,6 +99,16 @@ public static class ServiceExtensions
                         ctx.Response.ContentType = "application/json";
                         var response = mini_mes_be.DTOs.ApiResponse.Fail("Forbidden: you do not have permission to access this resource.", 403);
                         await ctx.Response.WriteAsJsonAsync(response);
+                    },
+                    OnMessageReceived = context =>
+                    {
+                        var accessToken = context.Request.Query["access_token"];
+                        var path = context.HttpContext.Request.Path;
+                        if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/mes-hub"))
+                        {
+                            context.Token = accessToken;
+                        }
+                        return Task.CompletedTask;
                     }
                 };
             });
@@ -119,11 +129,16 @@ public static class ServiceExtensions
         services.AddScoped<IJwtService, JwtService>();
         services.AddScoped<IAuthService, AuthService>();
 
-        // Repositories
-        // services.AddScoped<IWorkOrderRepository, WorkOrderRepository>();
+        // MES core services
+        services.AddScoped<IProductService, ProductService>();
+        services.AddScoped<IMachineService, MachineService>();
+        services.AddScoped<IWorkOrderService, WorkOrderService>();
+        services.AddScoped<IQualityCheckService, QualityCheckService>();
+        services.AddScoped<IInventoryService, InventoryService>();
+        services.AddScoped<IDashboardService, DashboardService>();
 
-        // Services
-        // services.AddScoped<IWorkOrderService, WorkOrderService>();
+        // Background simulation service
+        services.AddHostedService<mini_mes_be.BackgroundServices.ProductionSimulatorService>();
 
         return services;
     }

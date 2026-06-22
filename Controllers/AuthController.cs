@@ -12,17 +12,12 @@ namespace mini_mes_be.Controllers;
 public class AuthController : ControllerBase
 {
     private readonly IAuthService _auth;
-
     public AuthController(IAuthService auth) => _auth = auth;
-
     private string IpAddress =>
         Request.Headers.TryGetValue("X-Forwarded-For", out var ip)
             ? ip.ToString()
             : HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
 
-    // ── POST /v1/register ───────────────────────────────────────────────
-
-    /// <summary>Register a new user account (email must be unique).</summary>
     [AllowAnonymous]
     [HttpPost("register")]
     [ProducesResponseType(typeof(ApiResponse<TokenResponse>), StatusCodes.Status201Created)]
@@ -35,7 +30,6 @@ public class AuthController : ControllerBase
 
     // ── POST /v1/login ─────────────────────────────────────────────────
 
-    /// <summary>Authenticate with email + password and obtain access + refresh tokens.</summary>
     [AllowAnonymous]
     [HttpPost("login")]
     [ProducesResponseType(typeof(ApiResponse<TokenResponse>), StatusCodes.Status200OK)]
@@ -48,7 +42,6 @@ public class AuthController : ControllerBase
 
     // ── POST /v1/refresh ───────────────────────────────────────────────
 
-    /// <summary>Exchange a valid refresh token for a new access + refresh token pair.</summary>
     [AllowAnonymous]
     [HttpPost("refresh")]
     [ProducesResponseType(typeof(ApiResponse<TokenResponse>), StatusCodes.Status200OK)]
@@ -61,7 +54,6 @@ public class AuthController : ControllerBase
 
     // ── POST /v1/revoke ────────────────────────────────────────────────
 
-    /// <summary>Revoke a refresh token (logout from a specific device).</summary>
     [Authorize]
     [HttpPost("revoke")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
@@ -74,7 +66,6 @@ public class AuthController : ControllerBase
 
     // ── POST /v1/reset-password ──────────────────────────────────────────
 
-    /// <summary>Reset a user's password by email. Requires new password and confirmation.</summary>
     [AllowAnonymous]
     [HttpPost("reset_password")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
@@ -87,7 +78,6 @@ public class AuthController : ControllerBase
 
     // ── GET /v1/me ─────────────────────────────────────────────────────
 
-    /// <summary>Returns the currently authenticated user's claims.</summary>
     [Authorize]
     [HttpGet("me")]
     [ProducesResponseType(typeof(ApiResponse<UserMeResponse>), StatusCodes.Status200OK)]
