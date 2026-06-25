@@ -11,7 +11,6 @@
 - [Kiến trúc dự án](#-kiến-trúc-dự-án)
 - [Cấu trúc thư mục](#-cấu-trúc-thư-mục)
 - [Database Schema](#-database-schema)
-- [API Endpoints](#-api-endpoints)
 - [Real-time (SignalR)](#-real-time-signalr)
 - [Cài đặt & Chạy dự án](#-cài-đặt--chạy-dự-án)
 - [Cấu hình](#️-cấu-hình)
@@ -23,34 +22,34 @@
 
 **Mini MES** là hệ thống backend phục vụ quản lý sản xuất trong nhà máy, bao gồm các chức năng chính:
 
-| Module               | Mô tả                                                         |
-| -------------------- | -------------------------------------------------------------- |
-| **Authentication**   | Đăng ký, đăng nhập, refresh/revoke token, reset mật khẩu (JWT)|
-| **Products**         | CRUD sản phẩm (tên, SKU, đơn vị, tồn kho)                    |
-| **Machines**         | CRUD máy móc, theo dõi trạng thái (Idle/Running/Maintenance/Error) |
-| **Work Orders**      | Quản lý lệnh sản xuất, theo dõi tiến độ, ghi nhận output     |
-| **Quality Checks**   | Kiểm tra chất lượng sản phẩm (Pass/Fail/Rework)               |
-| **Inventory**        | Quản lý tồn kho, giao dịch nhập/xuất/sản xuất/điều chỉnh     |
-| **Dashboard**        | Tổng hợp KPI sản xuất real-time                               |
+| Module                      | Mô tả                                                                    |
+| --------------------------- | ------------------------------------------------------------------------ |
+| **Authentication**          | Đăng ký, đăng nhập, refresh/revoke token, reset mật khẩu (JWT)           |
+| **Products**                | CRUD sản phẩm (tên, SKU, đơn vị, tồn kho)                                |
+| **Machines**                | CRUD máy móc, theo dõi trạng thái (Idle/Running/Maintenance/Error)       |
+| **Work Orders**             | Quản lý lệnh sản xuất, theo dõi tiến độ, ghi nhận output                 |
+| **Quality Checks**          | Kiểm tra chất lượng sản phẩm (Pass/Fail/Rework)                          |
+| **Inventory**               | Quản lý tồn kho, giao dịch nhập/xuất/sản xuất/điều chỉnh                 |
+| **Dashboard**               | Tổng hợp KPI sản xuất real-time                                          |
 | **BOM (Bill of Materials)** | Định mức nguyên vật liệu, quản lý cấu trúc sản phẩm và kiểm tra vòng lặp |
-| **Real-time Hub**    | Push events qua SignalR (output, trạng thái máy, dashboard)   |
+| **Real-time Hub**           | Push events qua SignalR (output, trạng thái máy, dashboard)              |
 
 ---
 
 ## 🛠 Tech Stack
 
-| Thành phần        | Công nghệ                          |
-| ----------------- | ---------------------------------- |
-| **Framework**     | .NET 10 (ASP.NET Core)             |
-| **ORM**           | Entity Framework Core 10           |
-| **Database**      | SQL Server (Docker)                |
-| **Authentication**| JWT Bearer (Access + Refresh Token)|
-| **Hashing**       | BCrypt.Net                         |
-| **Validation**    | FluentValidation                   |
-| **Object Mapping**| Mapster                            |
-| **Real-time**     | SignalR                            |
-| **Logging**       | Serilog (Console sink)             |
-| **API Docs**      | OpenAPI + Scalar                   |
+| Thành phần         | Công nghệ                           |
+| ------------------ | ----------------------------------- |
+| **Framework**      | .NET 10 (ASP.NET Core)              |
+| **ORM**            | Entity Framework Core 10            |
+| **Database**       | SQL Server (Docker)                 |
+| **Authentication** | JWT Bearer (Access + Refresh Token) |
+| **Hashing**        | BCrypt.Net                          |
+| **Validation**     | FluentValidation                    |
+| **Object Mapping** | Mapster                             |
+| **Real-time**      | SignalR                             |
+| **Logging**        | Serilog (Console sink)              |
+| **API Docs**       | OpenAPI + Scalar                    |
 
 ---
 
@@ -312,95 +311,6 @@ erDiagram
 
 ---
 
-## 📡 API Endpoints
-
-Tất cả API đều có prefix `/v1/` và trả về format thống nhất:
-
-```json
-{
-  "status": true,
-  "code": 200,
-  "message": "Success",
-  "data": { ... }
-}
-```
-
-### 🔐 Authentication (`/v1`)
-
-| Method | Endpoint           | Auth     | Mô tả                                |
-| ------ | ------------------ | -------- | ------------------------------------- |
-| POST   | `/register`        | Public   | Đăng ký tài khoản mới                |
-| POST   | `/login`           | Public   | Đăng nhập, nhận access + refresh token|
-| POST   | `/refresh`         | Public   | Làm mới access token                 |
-| POST   | `/revoke`          | Bearer   | Thu hồi refresh token (logout)        |
-| POST   | `/reset_password`  | Public   | Đặt lại mật khẩu                     |
-| GET    | `/me`              | Bearer   | Lấy thông tin user hiện tại           |
-
-### 📦 Products (`/v1/products`)
-
-| Method | Endpoint      | Auth   | Mô tả                     |
-| ------ | ------------- | ------ | -------------------------- |
-| GET    | `/`           | Bearer | Danh sách sản phẩm (phân trang) |
-| GET    | `/{id}`       | Bearer | Chi tiết sản phẩm          |
-| POST   | `/`           | Bearer | Tạo sản phẩm mới           |
-| PUT    | `/{id}`       | Bearer | Cập nhật sản phẩm          |
-| DELETE | `/{id}`       | Bearer | Xoá sản phẩm               |
-
-### 📋 Bill of Materials (`/v1/products/{productId}/bom`)
-
-| Method | Endpoint          | Auth   | Mô tả                                      |
-| ------ | ----------------- | ------ | ------------------------------------------ |
-| GET    | `/`               | Bearer | Lấy định mức nguyên vật liệu (BOM) sản phẩm |
-| PUT    | `/`               | Bearer | Thiết lập hàng loạt định mức (BOM) sản phẩm |
-| POST   | `/items`          | Bearer | Thêm nguyên vật liệu mới vào BOM           |
-| PUT    | `/items/{id}`     | Bearer | Cập nhật định mức nguyên vật liệu trong BOM |
-| DELETE | `/items/{id}`     | Bearer | Xoá nguyên vật liệu khỏi BOM               |
-
-### 🏭 Machines (`/v1/machines`)
-
-| Method | Endpoint          | Auth   | Mô tả                          |
-| ------ | ----------------- | ------ | ------------------------------- |
-| GET    | `/`               | Bearer | Danh sách máy (phân trang)      |
-| GET    | `/{id}`           | Bearer | Chi tiết máy                    |
-| POST   | `/`               | Bearer | Thêm máy mới                   |
-| PUT    | `/{id}`           | Bearer | Cập nhật thông tin máy          |
-| PATCH  | `/{id}/status`    | Bearer | Cập nhật trạng thái máy         |
-| DELETE | `/{id}`           | Bearer | Xoá máy                        |
-
-### 📋 Work Orders (`/v1/work-orders`)
-
-| Method | Endpoint              | Auth   | Mô tả                              |
-| ------ | --------------------- | ------ | ----------------------------------- |
-| GET    | `/`                   | Bearer | Danh sách lệnh sản xuất (lọc theo status) |
-| GET    | `/{id}`               | Bearer | Chi tiết lệnh (bao gồm logs, products)    |
-| POST   | `/`                   | Bearer | Tạo lệnh sản xuất mới              |
-| PUT    | `/{id}`               | Bearer | Cập nhật lệnh                      |
-| PATCH  | `/{id}/status`        | Bearer | Chuyển trạng thái lệnh              |
-| POST   | `/{id}/output`        | Bearer | Ghi nhận sản lượng sản xuất         |
-
-### 🔍 Quality Checks (`/v1/quality-checks`)
-
-| Method | Endpoint | Auth   | Mô tả                                        |
-| ------ | -------- | ------ | --------------------------------------------- |
-| GET    | `/`      | Bearer | Danh sách kiểm tra (lọc work_order, result)   |
-| POST   | `/`      | Bearer | Tạo phiếu kiểm tra chất lượng                 |
-
-### 📊 Inventory (`/v1/inventory`)
-
-| Method | Endpoint          | Auth   | Mô tả                              |
-| ------ | ----------------- | ------ | ----------------------------------- |
-| GET    | `/`               | Bearer | Tổng hợp tồn kho (phân trang)      |
-| GET    | `/transactions`   | Bearer | Lịch sử giao dịch kho              |
-| POST   | `/transactions`   | Bearer | Tạo giao dịch kho mới              |
-
-### 📈 Dashboard (`/v1/dashboard`)
-
-| Method | Endpoint    | Auth   | Mô tả                                       |
-| ------ | ----------- | ------ | -------------------------------------------- |
-| GET    | `/summary`  | Bearer | KPI tổng hợp: máy, lệnh, sản lượng, yield   |
-
----
-
 ## ⚡ Real-time (SignalR)
 
 ### Kết nối
@@ -427,72 +337,24 @@ Khi client kết nối thành công, server tự động:
 
 ### Server → Client Events
 
-| Event                      | Mô tả                                        |
-| -------------------------- | --------------------------------------------- |
-| `Connected`                | Thông tin kết nối + danh sách machine subscribed |
-| `ProductionOutputUpdated`  | Cập nhật sản lượng real-time                  |
-| `DashboardUpdated`         | Dashboard KPI đã thay đổi                     |
-| `SubscribedMachine`        | Xác nhận subscribe machine thành công          |
-| `UnsubscribedMachine`      | Xác nhận unsubscribe machine                   |
-| `SubscribedWorkOrder`      | Xác nhận subscribe work order thành công       |
-| `UnsubscribedWorkOrder`    | Xác nhận unsubscribe work order                |
+| Event                     | Mô tả                                            |
+| ------------------------- | ------------------------------------------------ |
+| `Connected`               | Thông tin kết nối + danh sách machine subscribed |
+| `ProductionOutputUpdated` | Cập nhật sản lượng real-time                     |
+| `DashboardUpdated`        | Dashboard KPI đã thay đổi                        |
+| `SubscribedMachine`       | Xác nhận subscribe machine thành công            |
+| `UnsubscribedMachine`     | Xác nhận unsubscribe machine                     |
+| `SubscribedWorkOrder`     | Xác nhận subscribe work order thành công         |
+| `UnsubscribedWorkOrder`   | Xác nhận unsubscribe work order                  |
 
 ### Client → Server Methods
 
-| Method                        | Param         | Mô tả                           |
-| ----------------------------- | ------------- | -------------------------------- |
-| `SubscribeMachine(machineId)` | `int`         | Subscribe real-time updates cho máy |
-| `UnsubscribeMachine(machineId)` | `int`       | Unsubscribe khỏi máy             |
-| `SubscribeWorkOrder(workOrderId)` | `int`     | Subscribe updates cho lệnh SX    |
-| `UnsubscribeWorkOrder(workOrderId)` | `int`   | Unsubscribe khỏi lệnh SX        |
-
----
-
-## 🚀 Cài đặt & Chạy dự án
-
-### Yêu cầu
-
-- [.NET 10 SDK](https://dotnet.microsoft.com/download)
-- [Docker](https://www.docker.com/) (cho SQL Server)
-- macOS / Linux / Windows
-
-### 1. Khởi động SQL Server
-
-```bash
-docker run -e "ACCEPT_EULA=Y" \
-           -e "SA_PASSWORD=ngonteumoi1A!" \
-           -p 1433:1433 \
-           -d mcr.microsoft.com/mssql/server:2022-latest
-```
-
-### 2. Clone & sinh JWT keys
-
-```bash
-git clone <repo-url>
-cd mini-mes-be
-
-# Sinh JWT secret keys cho Development & Production
-chmod +x generate-jwt-keys.sh
-./generate-jwt-keys.sh
-```
-
-### 3. Chạy migrations
-
-```bash
-dotnet ef database update
-```
-
-### 4. Chạy ứng dụng
-
-```bash
-dotnet run
-```
-
-Ứng dụng sẽ khởi động và tự mở **Scalar API Docs** tại:
-
-```
-http://localhost:5130/scalar/v1
-```
+| Method                              | Param | Mô tả                               |
+| ----------------------------------- | ----- | ----------------------------------- |
+| `SubscribeMachine(machineId)`       | `int` | Subscribe real-time updates cho máy |
+| `UnsubscribeMachine(machineId)`     | `int` | Unsubscribe khỏi máy                |
+| `SubscribeWorkOrder(workOrderId)`   | `int` | Subscribe updates cho lệnh SX       |
+| `UnsubscribeWorkOrder(workOrderId)` | `int` | Unsubscribe khỏi lệnh SX            |
 
 ---
 
@@ -500,21 +362,21 @@ http://localhost:5130/scalar/v1
 
 ### `appsettings.json` (shared)
 
-| Key                                | Mô tả                            | Mặc định           |
-| ---------------------------------- | --------------------------------- | ------------------- |
-| `ConnectionStrings:DefaultConnection` | Connection string SQL Server   | `localhost,1433`    |
-| `Jwt:Issuer`                       | JWT issuer                        | `mini-mes-api`      |
-| `Jwt:Audience`                     | JWT audience                      | `mini-mes-client`   |
-| `Jwt:AccessTokenExpiryMinutes`     | Thời hạn access token (phút)     | `60`                |
-| `Jwt:RefreshTokenExpiryDays`       | Thời hạn refresh token (ngày)    | `7`                 |
-| `Simulation:Enabled`               | Bật/tắt production simulator      | `true`              |
-| `Simulation:IntervalSeconds`       | Chu kỳ simulation (giây)          | `10`                |
+| Key                                   | Mô tả                         | Mặc định          |
+| ------------------------------------- | ----------------------------- | ----------------- |
+| `ConnectionStrings:DefaultConnection` | Connection string SQL Server  | `localhost,1433`  |
+| `Jwt:Issuer`                          | JWT issuer                    | `mini-mes-api`    |
+| `Jwt:Audience`                        | JWT audience                  | `mini-mes-client` |
+| `Jwt:AccessTokenExpiryMinutes`        | Thời hạn access token (phút)  | `60`              |
+| `Jwt:RefreshTokenExpiryDays`          | Thời hạn refresh token (ngày) | `7`               |
+| `Simulation:Enabled`                  | Bật/tắt production simulator  | `true`            |
+| `Simulation:IntervalSeconds`          | Chu kỳ simulation (giây)      | `10`              |
 
 ### `appsettings.{Environment}.json`
 
-| Key              | Mô tả                           | Lưu ý                    |
-| ---------------- | -------------------------------- | ------------------------- |
-| `Jwt:SecretKey`  | HMAC-SHA secret key (Base64)     | ⚠️ Không commit lên git  |
+| Key             | Mô tả                        | Lưu ý                   |
+| --------------- | ---------------------------- | ----------------------- |
+| `Jwt:SecretKey` | HMAC-SHA secret key (Base64) | ⚠️ Không commit lên git |
 
 > **Quan trọng:** File `appsettings.Production.json` chứa secret key production và đã được thêm vào `.gitignore`. Dùng script `generate-jwt-keys.sh` để sinh key mới.
 
