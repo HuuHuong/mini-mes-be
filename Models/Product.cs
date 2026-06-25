@@ -20,4 +20,10 @@ public class Product : BaseEntity
     // Navigation
     public ICollection<WorkOrderProduct> work_order_products { get; set; } = [];
     public ICollection<InventoryTransaction> inventory_transactions { get; set; } = [];
+
+    /// <summary>BOM items: materials/components needed to produce this product.</summary>
+    public ICollection<BomItem> bom_items { get; set; } = [];
+
+    /// <summary>Products that use this product as a material.</summary>
+    public ICollection<BomItem> bom_used_in { get; set; } = [];
 }

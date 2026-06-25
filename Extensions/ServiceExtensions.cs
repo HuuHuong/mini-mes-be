@@ -136,6 +136,7 @@ public static class ServiceExtensions
         services.AddScoped<IQualityCheckService, QualityCheckService>();
         services.AddScoped<IInventoryService, InventoryService>();
         services.AddScoped<IDashboardService, DashboardService>();
+        services.AddScoped<IBomService, BomService>();
 
         // Background simulation service
         services.AddHostedService<mini_mes_be.BackgroundServices.ProductionSimulatorService>();

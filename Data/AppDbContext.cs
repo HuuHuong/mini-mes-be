@@ -15,6 +15,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<WorkOrderProduct> WorkOrderProducts => Set<WorkOrderProduct>();
     public DbSet<QualityCheck> QualityChecks => Set<QualityCheck>();
     public DbSet<InventoryTransaction> InventoryTransactions => Set<InventoryTransaction>();
+    public DbSet<BomItem> BomItems => Set<BomItem>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -180,6 +181,30 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             e.HasOne(it => it.user)
              .WithMany()
              .HasForeignKey(it => it.user_id)
+             .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // ── BomItem ──────────────────────────────────────────────────────────
+        modelBuilder.Entity<BomItem>(e =>
+        {
+            e.HasKey(b => b.id);
+            e.Property(b => b.id).ValueGeneratedOnAdd();
+
+            // A product can only list each material once
+            e.HasIndex(b => new { b.product_id, b.material_id }).IsUnique();
+
+            e.Property(b => b.quantity).HasPrecision(18, 4);
+            e.Property(b => b.unit).HasMaxLength(50).IsRequired();
+            e.Property(b => b.notes).HasMaxLength(500);
+
+            e.HasOne(b => b.product)
+             .WithMany(p => p.bom_items)
+             .HasForeignKey(b => b.product_id)
+             .OnDelete(DeleteBehavior.Cascade);
+
+            e.HasOne(b => b.material)
+             .WithMany(p => p.bom_used_in)
+             .HasForeignKey(b => b.material_id)
              .OnDelete(DeleteBehavior.Restrict);
         });
 
